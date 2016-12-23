@@ -8,6 +8,18 @@ class SortByPopularPosts {
 
 	private static $cron_time = '4:40:00';
 
+	/**
+	 * Query string for sort
+	 * @var string
+	 */
+	public static $sort_query_name = 'sort';
+
+	/**
+	 * Set default sort ('popular' or 'default')
+	 * @var string
+	 */
+	public static $sort_default = 'default';
+
 	const PV_TABLE = 'sbpp_wppp';
 
 	const PPS_TABLE = 'popularpostssummary';
@@ -23,6 +35,7 @@ class SortByPopularPosts {
 	 */
 	private static function init_hooks() {
 		self::$initiated = true;
+		add_filter( 'query_vars', array( 'SortByPopularPosts', 'query_vars' ) );
 	}
 
 	/**
@@ -175,8 +188,15 @@ class SortByPopularPosts {
 		if ( is_admin() || ! $query->is_main_query() )
 			return false;
 		
+		$sort_query_string = '';
+		$sort_popular = false;
+		if ( isset( $query->query_vars[self::$sort_query_name] ) ) {
+			$sort_query_string = $query->query_vars[self::$sort_query_name];
+		}
+		$sort_popular = self::to_sort_popular( $sort_query_string );
+		
 		if ( $query->is_category() || $query->is_tag() )
-			return true;
+			return $sort_popular;
 		
 		return false;
 	}
@@ -185,8 +205,15 @@ class SortByPopularPosts {
 		if ( is_admin() || ! $query->is_main_query() )
 			return false;
 		
+		$sort_query_string = '';
+		$sort_popular = false;
+		if ( isset( $query->query_vars[self::$sort_query_name] ) ) {
+			$sort_query_string = $query->query_vars[self::$sort_query_name];
+		}
+		$sort_popular = self::to_sort_popular( $sort_query_string );
+		
 		if ( $query->is_category() || $query->is_tag() )
-			return true;
+			return $sort_popular;
 		
 		return false;
 	}
@@ -254,5 +281,20 @@ class SortByPopularPosts {
 		
 		$fields .= ", sum({$pv_table}.pageviews) AS pageviews";
 		return $fields;
+	}
+
+	public static function query_vars( $query_vars ) {
+		$query_vars[] = self::$sort_query_name;
+		return $query_vars;
+	}
+
+	private static function to_sort_popular( $sort_query_string ) {
+		if ( empty( $sort_query_string ) ) {
+			$sort_query_string = self::$sort_default;
+		}
+		if ( $sort_query_string == 'popular' ) {
+			return true;
+		}
+		return false;
 	}
 }
