@@ -69,6 +69,38 @@ class SortByPopularPostsTest extends WP_UnitTestCase {
 			'?' . $sort_default, 
 			SortByPopularPosts::get_link( 'default', $url . '?' . $sort_default ) );
 	}
+
+	function test_do_shortcode_link() {
+		// NG
+		$shortcode = '[sbpp-link sort="popular" url="http://example.com"]';
+		$link = 'http://example.com?sort=popular';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+		
+		$shortcode = '[sbpp-link sort="popular" url="http://example.com/"]';
+		$link = 'http://example.com/?sort=popular';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+		
+		// NG
+		$shortcode = '[sbpp-link sort="popular" url="//example.com"]';
+		$link = '//example.com?sort=popular';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+		
+		$shortcode = '[sbpp-link sort="popular" url="//example.com/"]';
+		$link = '//example.com/?sort=popular';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+		
+		$shortcode = '[sbpp-link sort="popular" url="//example.com/?cat=1&sort=default"]';
+		$link = '//example.com/?cat=1&#038;sort=popular';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+		
+		$shortcode = '[sbpp-link url="//example.com/?cat=1&sort=default"]';
+		$link = '//example.com/?cat=1';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+		
+		$shortcode = '[sbpp-link sort="popular" url="//example.com/?cat=1&sort=default"]text[/sbpp-link]';
+		$link = '<a href="//example.com/?cat=1&#038;sort=popular">text</a>';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+	}
 }
 
 class unprotector {

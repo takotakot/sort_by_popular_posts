@@ -36,6 +36,7 @@ class SortByPopularPosts {
 	private static function init_hooks() {
 		self::$initiated = true;
 		add_filter( 'query_vars', array( 'SortByPopularPosts', 'query_vars' ) );
+		add_shortcode( 'sbpp-link', array( 'SortByPopularPosts', 'shortcode_link' ) );
 	}
 
 	/**
@@ -313,5 +314,16 @@ class SortByPopularPosts {
 
 	public static function get_default_link( $url = null, $escape = true ) {
 		return self::get_link( 'default', $url, $escape );
+	}
+
+	public static function shortcode_link( $atts = null, $content = null ) {
+		$url = isset( $atts['url'] ) ? $atts['url'] : null;
+		$escape = ( isset( $atts['escape'] ) && $atts['escape'] == '0' ) ? false : true;
+		$sort = ( isset( $atts['sort'] ) ) ? $atts['sort'] : null;
+		
+		if ( empty( $content ) ) {
+			return self::get_link( $sort, $url, $escape );
+		}
+		return sprintf( '<a href="%s">%s</a>', self::get_link( $sort, $url, true ), $content );
 	}
 }
