@@ -297,4 +297,21 @@ class SortByPopularPosts {
 		}
 		return false;
 	}
+
+	public static function get_link( $sort = null, $url = '', $escape = true ) {
+		if ( empty( $url ) )
+			$url = false;
+		$url = add_query_arg( self::$sort_query_name, $sort, $url );
+		if ( $escape )
+			$url = esc_url( $url );
+		return $url;
+	}
+
+	public static function get_popular_link( $url = null, $escape = true ) {
+		return self::get_link( 'popular', $url, $escape );
+	}
+
+	public static function get_default_link( $url = null, $escape = true ) {
+		return self::get_link( 'default', $url, $escape );
+	}
 }
