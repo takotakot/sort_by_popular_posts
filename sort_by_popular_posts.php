@@ -6,7 +6,7 @@
  * Plugin Name: SortByPopularPosts
  * Plugin URI: http://example.com/
  * Description: Display posts sort by popular posts.
- * Version: 0.0.1
+ * Version: 0.0.2
  * Author: takotakot
  * Author URI: http://example.com/
  * License: MIT/X
@@ -19,7 +19,7 @@ if ( ! function_exists( 'add_action' ) ) {
 	exit();
 }
 
-define( 'SORTBYPOPULARPOSTS_VERSION', '0.0.1' );
+define( 'SORTBYPOPULARPOSTS_VERSION', '0.0.2' );
 define( 'SORTBYPOPULARPOSTS__PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'SORTBYPOPULARPOSTS__PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
