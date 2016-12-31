@@ -99,7 +99,7 @@ class SortByPopularPosts {
 			   GROUP BY pps.postid
 			  );
 			", 
-			self::$days, 
+			self::$days + 1, 
 			self::$days );
 		
 		// update old zero
@@ -120,7 +120,7 @@ class SortByPopularPosts {
 			     sbpp.days = %d
 			  );
 			", 
-			self::$days, 
+			self::$days + 1, 
 			self::$days );
 		
 		// insert new
@@ -143,7 +143,7 @@ class SortByPopularPosts {
 			  GROUP BY posts.ID;
 			", 
 			self::$days, 
-			self::$days );
+			self::$days + 1 );
 		
 		// insert new zero
 		$sql_insert_zero = sprintf( 
