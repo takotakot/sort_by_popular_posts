@@ -4,7 +4,7 @@
  */
 /*
  * Plugin Name: SortByPopularPosts
- * Plugin URI: http://example.com/
+ * Plugin URI: https://github.com/takotakot/sort_by_popular_posts
  * Description: Display posts sort by popular posts.
  * Version: 0.0.3
  * Author: takotakot
