@@ -320,10 +320,11 @@ class SortByPopularPosts {
 		$url = isset( $atts['url'] ) ? $atts['url'] : null;
 		$escape = ( isset( $atts['escape'] ) && $atts['escape'] == '0' ) ? false : true;
 		$sort = ( isset( $atts['sort'] ) ) ? $atts['sort'] : null;
+		$class = ( is_null($sort) ) ? 'default' : $sort;
 		
 		if ( empty( $content ) ) {
 			return self::get_link( $sort, $url, $escape );
 		}
-		return sprintf( '<a href="%s">%s</a>', self::get_link( $sort, $url, true ), $content );
+		return sprintf( '<a href="%s" class="sbpp sbpp_%s">%s</a>', self::get_link( $sort, $url, true ), $class, $content );
 	}
 }

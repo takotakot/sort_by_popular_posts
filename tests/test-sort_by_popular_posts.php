@@ -97,8 +97,16 @@ class SortByPopularPostsTest extends WP_UnitTestCase {
 		$link = '//example.com/?cat=1';
 		$this->assertEquals( $link, do_shortcode( $shortcode ) );
 		
+		$shortcode = '[sbpp-link url="//example.com/?cat=1&sort=default"]text[/sbpp-link]';
+		$link = '<a href="//example.com/?cat=1" class="sbpp sbpp_default">text</a>';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+		
 		$shortcode = '[sbpp-link sort="popular" url="//example.com/?cat=1&sort=default"]text[/sbpp-link]';
-		$link = '<a href="//example.com/?cat=1&#038;sort=popular">text</a>';
+		$link = '<a href="//example.com/?cat=1&#038;sort=popular" class="sbpp sbpp_popular">text</a>';
+		$this->assertEquals( $link, do_shortcode( $shortcode ) );
+		
+		$shortcode = '[sbpp-link sort="default" url="//example.com/?cat=1&sort=default"]text[/sbpp-link]';
+		$link = '<a href="//example.com/?cat=1&#038;sort=default" class="sbpp sbpp_default">text</a>';
 		$this->assertEquals( $link, do_shortcode( $shortcode ) );
 	}
 }
