@@ -196,7 +196,7 @@ class SortByPopularPosts {
 		}
 		$sort_popular = self::to_sort_popular( $sort_query_string );
 		
-		if ( $query->is_archive() )
+		if ( $query->is_archive() || $query->is_search() )
 			return $sort_popular;
 		
 		return false;
@@ -213,7 +213,7 @@ class SortByPopularPosts {
 		}
 		$sort_popular = self::to_sort_popular( $sort_query_string );
 		
-		if ( $query->is_archive() )
+		if ( $query->is_archive() || $query->is_search() )
 			return $sort_popular;
 		
 		return false;
