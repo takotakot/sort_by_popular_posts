@@ -202,21 +202,40 @@ class SortByPopularPosts {
 		return false;
 	}
 
+	/**
+	 * 
+	 * Returns 0 for 'do not change', 1 for 'sort popular', 2 for 'sort date'
+	 * 
+	 * @param unknown $query
+	 * @return integer 
+	 */
 	private static function type_posts_order( $query ) {
 		if ( is_admin() || ! $query->is_main_query() )
-			return false;
+			return 0;
 		
 		$sort_query_string = '';
-		$sort_popular = false;
+		$sort_popular = 0;
 		if ( isset( $query->query_vars[self::$sort_query_name] ) ) {
 			$sort_query_string = $query->query_vars[self::$sort_query_name];
 		}
 		$sort_popular = self::to_sort_popular( $sort_query_string );
 		
-		if ( $query->is_archive() || $query->is_search() )
-			return $sort_popular;
+		if( $query->is_search() ) {
+			if( $sort_popular ){
+				return 1;
+			}else{
+				// Force sorting by date ignoring post_title
+				return 2;
+			}
+		}elseif ( $query->is_archive() ){
+			if( $sort_popular ){
+				return 1;
+			}else{
+				return 0;
+			}
+		}
 		
-		return false;
+		return 0;
 	}
 
 	public static function get_cron_time() {
@@ -241,13 +260,19 @@ class SortByPopularPosts {
 	}
 
 	public static function posts_orderby( $orderby, $query ) {
-		if ( ! self::type_posts_order( $query ) )
+		$type_posts_order = self::type_posts_order( $query );
+		if ( ! $type_posts_order )
 			return $orderby;
 		
 		global $wpdb;
 		$pv_table = $wpdb->prefix . self::PV_TABLE;
 		
-		$orderby = "COALESCE(SUM({$pv_table}.pageviews), 0) DESC, {$wpdb->posts}.post_date DESC";
+		if( $type_posts_order == 1 ) {
+			$orderby = "COALESCE(SUM({$pv_table}.pageviews), 0) DESC, {$wpdb->posts}.post_date DESC";
+		}elseif( $type_posts_order == 2 ){
+			// Force sorting by date ignoring post_title
+			$orderby = "{$wpdb->posts}.post_date DESC";
+		}
 		return $orderby;
 	}
 
