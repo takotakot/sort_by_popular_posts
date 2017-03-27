@@ -202,7 +202,7 @@ class SortByPopularPosts {
 		return false;
 	}
 
-	private static function need_posts_order( $query ) {
+	private static function type_posts_order( $query ) {
 		if ( is_admin() || ! $query->is_main_query() )
 			return false;
 		
@@ -230,7 +230,7 @@ class SortByPopularPosts {
 	}
 
 	public static function posts_join( $join, $query ) {
-		if ( ! ( self::need_pageviews( $query ) || self::need_posts_order( $query ) ) )
+		if ( ! ( self::need_pageviews( $query ) || self::type_posts_order( $query ) ) )
 			return $join;
 		
 		global $wpdb;
@@ -241,7 +241,7 @@ class SortByPopularPosts {
 	}
 
 	public static function posts_orderby( $orderby, $query ) {
-		if ( ! self::need_posts_order( $query ) )
+		if ( ! self::type_posts_order( $query ) )
 			return $orderby;
 		
 		global $wpdb;
@@ -256,7 +256,7 @@ class SortByPopularPosts {
 	}
 
 	public static function posts_groupby( $groupby, $query ) {
-		if ( ! ( self::need_pageviews( $query ) || self::need_posts_order( $query ) ) )
+		if ( ! ( self::need_pageviews( $query ) || self::type_posts_order( $query ) ) )
 			return $groupby;
 		
 		global $wpdb;
