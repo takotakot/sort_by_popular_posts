@@ -211,7 +211,7 @@ class SortByPopularPosts {
 	 * @param unknown $query
 	 * @return integer 
 	 */
-	private static function type_posts_order( $query ) {
+	public static function type_posts_order( $query ) {
 		if ( is_admin() || ! $query->is_main_query() )
 			return 0;
 		
