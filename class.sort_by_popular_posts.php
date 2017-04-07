@@ -139,11 +139,12 @@ class SortByPopularPosts {
 			   AND
 			    posts.ID = pps.postid
 			   AND
-			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp})
+			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp} WHERE days = %d))
 			  GROUP BY posts.ID;
 			", 
 			self::$days, 
-			self::$days + 1 );
+			self::$days + 1,
+			self::$days );
 		
 		// insert new zero
 		$sql_insert_zero = sprintf( 
@@ -157,8 +158,9 @@ class SortByPopularPosts {
 			     (posts.post_status = 'publish'
 			    OR posts.post_status = 'private')
 			   AND
-			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp});
+			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp} WHERE days = %d);
 			", 
+			self::$days,
 			self::$days );
 		
 		// remove deleted
