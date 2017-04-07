@@ -4,7 +4,7 @@ class SortByPopularPosts {
 
 	private static $initiated = false;
 
-	private static $days = 7;
+	private static $days = 30;
 
 	private static $cron_time = '4:40:00';
 
