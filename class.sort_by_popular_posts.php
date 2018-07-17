@@ -139,7 +139,7 @@ class SortByPopularPosts {
 			   AND
 			    posts.ID = pps.postid
 			   AND
-			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp} WHERE days = %d))
+			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp} WHERE days = %d)
 			  GROUP BY posts.ID;
 			", 
 			self::$days, 
