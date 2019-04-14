@@ -37,6 +37,7 @@ class SortByPopularPosts {
 		self::$initiated = true;
 		add_filter( 'query_vars', array( 'SortByPopularPosts', 'query_vars' ) );
 		add_shortcode( 'sbpp-link', array( 'SortByPopularPosts', 'shortcode_link' ) );
+		add_action( 'parse_request', array( 'SortByPopularPosts', 'add_noindex_action_if_sort_popular' ) );
 	}
 
 	/**
@@ -185,6 +186,12 @@ class SortByPopularPosts {
 		$wpdb->query( $sql_insert );
 		$wpdb->query( $sql_insert_zero );
 		$wpdb->query( $sql_delete );
+	}
+
+	public static function add_noindex_action_if_sort_popular( $query ) {
+		if ( isset( $query->query_vars[self::$sort_query_name] ) && $query->query_vars[self::$sort_query_name] === 'popular' ) {
+			add_action( 'wp_head', 'wp_no_robots', 30 );
+		}
 	}
 
 	private static function need_pageviews( $query ) {
