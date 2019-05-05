@@ -128,7 +128,7 @@ class SortByPopularPosts {
 			 ) v
 			 ON sbpp.postid = v.postid
 			SET
-			 pageviews = COALESCE(v.pageviews, 0)
+			 sbpp.pageviews = COALESCE(v.pageviews, 0)
 			 WHERE
 			  sbpp.days = %d
 			;
