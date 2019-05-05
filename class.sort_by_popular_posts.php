@@ -82,110 +82,63 @@ class SortByPopularPosts {
 		$table_sbpp_wppp = $prefix . self::PV_TABLE;
 		$table_wppp_pps = $prefix . self::PPS_TABLE;
 		$table_posts = $prefix . 'posts';
-		
+
 		// remove deleted
 		$sql_delete = sprintf( 
 			"
 			DELETE sbpp
 			 FROM {$table_sbpp_wppp} AS sbpp
 			 WHERE
-			 sbpp.postid NOT IN (
-			  SELECT posts.ID
-			   FROM {$table_posts} AS posts
-			   WHERE
-			     posts.post_type = 'post'
-			    AND
-			      (posts.post_status = 'publish'
-			     OR posts.post_status = 'private')
+			  sbpp.postid NOT IN (
+			   SELECT posts.ID
+			    FROM {$table_posts} AS posts
+			    WHERE
+			      posts.post_type IN('post')
+			     AND
+			      posts.post_status IN('publish', 'private')
 			  );
 			" );
-		
-		// insert new
-		$sql_insert = sprintf( 
-			"
-			INSERT INTO {$table_sbpp_wppp}(postid, days, pageviews)
-			 SELECT posts.ID, %d, COALESCE(sum(pps.pageviews), 0)
-			  FROM {$table_posts} AS posts, {$table_wppp_pps} AS pps
-			  WHERE
-			    posts.post_type = 'post'
-			   AND
-			     (posts.post_status = 'publish'
-			    OR posts.post_status = 'private')
-			   AND
-			    pps.view_date BETWEEN (CURRENT_DATE - INTERVAL %d day) AND (CURRENT_DATE - INTERVAL 1 day)
-			   AND
-			    posts.ID = pps.postid
-			   AND
-			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp} WHERE days = %d)
-			  GROUP BY posts.ID;
-			", 
-			self::$days, 
-			self::$days + 1,
-			self::$days );
-		
-		// insert new zero
+
+		// insert new using zero
 		$sql_insert_zero = sprintf( 
 			"
 			INSERT INTO {$table_sbpp_wppp} (postid, days, pageviews)
 			 SELECT posts.ID, %d, 0
-			 FROM {$table_posts} AS posts
+			  FROM {$table_posts} AS posts
 			  WHERE
-			    posts.post_type = 'post'
+			    posts.post_type IN('post')
 			   AND
-			     (posts.post_status = 'publish'
-			    OR posts.post_status = 'private')
+			    posts.post_status IN('publish', 'private')
 			   AND
 			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp} WHERE days = %d);
 			", 
 			self::$days,
 			self::$days );
-		
-		// update old
+
+		// update
 		$sql_update = sprintf( 
 			"
 			UPDATE {$table_sbpp_wppp} AS sbpp
-			SET
-			 pageviews = (
-			  SELECT COALESCE(sum(pps.pageviews), 0)
+			 LEFT JOIN (
+			  SELECT sum(pps.pageviews) AS pageviews, postid
 			   FROM {$table_wppp_pps} AS pps
 			   WHERE
-			     sbpp.postid = pps.postid
-			    AND
-			     pps.view_date BETWEEN (CURRENT_DATE - INTERVAL %d day) AND (CURRENT_DATE - INTERVAL 1 day)
-			    AND
-			     sbpp.days = %d
+			    pps.view_date BETWEEN (CURRENT_DATE - INTERVAL %d day) AND (CURRENT_DATE - INTERVAL 1 day)
 			   GROUP BY pps.postid
-			  );
-			", 
-			self::$days + 1, 
-			self::$days );
-		
-		// update old zero
-		$sql_update_zero = sprintf( 
-			"
-			UPDATE {$table_sbpp_wppp} AS sbpp
+			 ) v
+			 ON sbpp.postid = v.postid
 			SET
-			 pageviews = 0
-			WHERE
-			 sbpp.postid NOT IN (
-			  SELECT pps.postid
-			   FROM {$table_wppp_pps} AS pps
-			   WHERE
-			     sbpp.postid = pps.postid
-			    AND
-			     pps.view_date BETWEEN (CURRENT_DATE - INTERVAL %d day) AND (CURRENT_DATE - INTERVAL 1 day)
-			    AND
-			     sbpp.days = %d
-			  );
+			 pageviews = COALESCE(v.pageviews, 0)
+			 WHERE
+			  sbpp.days = %d
+			;
 			", 
 			self::$days + 1, 
 			self::$days );
-		
+
 		$wpdb->query( $sql_delete );
-		$wpdb->query( $sql_insert );
 		$wpdb->query( $sql_insert_zero );
 		$wpdb->query( $sql_update );
-		$wpdb->query( $sql_update_zero );
 	}
 
 	public static function add_noindex_action_if_sort_popular( $query ) {
