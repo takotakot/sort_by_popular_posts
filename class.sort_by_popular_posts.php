@@ -195,11 +195,10 @@ class SortByPopularPosts {
 	}
 
 	/**
+	 * Return 0 for 'do not change', 1 for 'sort popular', 2 for 'sort date'.
 	 * 
-	 * Returns 0 for 'do not change', 1 for 'sort popular', 2 for 'sort date'
-	 * 
-	 * @param unknown $query
-	 * @return integer 
+	 * @param WP_Query $query
+	 * @return int
 	 */
 	public static function type_posts_order( $query ) {
 		if ( is_admin() || ! $query->is_main_query() )
