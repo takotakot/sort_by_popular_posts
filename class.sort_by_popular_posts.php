@@ -233,8 +233,8 @@ class SortByPopularPosts {
 	public static function get_cron_time() {
 		$cron_time = self::$cron_time;
 		$cur_time = current_time( 'timestamp' );
-		$time_zone_diff = intval( ( $cur_time - time() ) / 1800 ) * 1800;
-		
+		$time_zone_diff = intval( ( $cur_time - time() ) / 300 ) * 300;
+
 		$time_next_str = date( sprintf( 'Y-m-d %s', $cron_time ), $cur_time );
 		
 		return strtotime( $time_next_str ) - $time_zone_diff;
