@@ -1,5 +1,13 @@
 <?php
+/**
+ * SortByPopularPosts class definitions.
+ *
+ * @package SortByPopularPosts
+ */
 
+/**
+ * SortByPopularPosts
+ */
 class SortByPopularPosts {
 
 	private static $initiated = false;
@@ -10,12 +18,14 @@ class SortByPopularPosts {
 
 	/**
 	 * Query string for sort
+	 *
 	 * @var string
 	 */
 	public static $sort_query_name = 'sort';
 
 	/**
 	 * Set default sort ('popular' or 'default')
+	 *
 	 * @var string
 	 */
 	public static $sort_default = 'default';
@@ -55,8 +65,8 @@ class SortByPopularPosts {
 		global $wpdb;
 		$table_sbpp_wppp = $wpdb->prefix . self::PV_TABLE;
 		$charset_collate = $wpdb->get_charset_collate();
-		
-		require_once ( ABSPATH . '/wp-admin/includes/upgrade.php' );
+
+		require_once ABSPATH . '/wp-admin/includes/upgrade.php';
 		$sql = "
 			CREATE TABLE `{$table_sbpp_wppp}` (
 			 `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -75,20 +85,20 @@ class SortByPopularPosts {
 	 */
 	public static function update_sbpp_wppp() {
 		global $wpdb;
-		
-		// set table name
-		$prefix = $wpdb->prefix;
-		
-		$table_sbpp_wppp = $prefix . self::PV_TABLE;
-		$table_wppp_pps = $prefix . self::PPS_TABLE;
-		$table_posts = $prefix . 'posts';
 
-		$post_types = array_merge( array( 'post' ), self::get_post_types() );
+		// Set table name.
+		$prefix = $wpdb->prefix;
+
+		$table_sbpp_wppp = $prefix . self::PV_TABLE;
+		$table_wppp_pps  = $prefix . self::PPS_TABLE;
+		$table_posts     = $prefix . 'posts';
+
+		$post_types              = array_merge( array( 'post' ), self::get_post_types() );
 		$quoted_post_type_string = self::get_quoted_csv( $post_types );
 
-		// remove deleted
+		// Remove deleted.
 		// TODO: Use prepare
-		$sql_delete = sprintf( 
+		$sql_delete = sprintf(
 			"
 			DELETE sbpp
 			 FROM {$table_sbpp_wppp} AS sbpp
@@ -101,10 +111,11 @@ class SortByPopularPosts {
 			     AND
 			      posts.post_status IN('publish', 'private')
 			  );
-			" );
+			"
+		);
 
 		// insert new using zero
-		$sql_insert_zero = sprintf( 
+		$sql_insert_zero = sprintf(
 			"
 			INSERT INTO {$table_sbpp_wppp} (postid, days, pageviews)
 			 SELECT posts.ID, %d, 0
@@ -115,12 +126,13 @@ class SortByPopularPosts {
 			    posts.post_status IN('publish', 'private')
 			   AND
 			    posts.ID NOT IN (SELECT postid FROM {$table_sbpp_wppp} WHERE days = %d);
-			", 
+			",
 			self::$days,
-			self::$days );
+			self::$days
+		);
 
 		// update
-		$sql_update = sprintf( 
+		$sql_update = sprintf(
 			"
 			UPDATE {$table_sbpp_wppp} AS sbpp
 			 LEFT JOIN (
@@ -136,9 +148,10 @@ class SortByPopularPosts {
 			 WHERE
 			  sbpp.days = %d
 			;
-			", 
-			self::$days + 1, 
-			self::$days );
+			",
+			self::$days + 1,
+			self::$days
+		);
 
 		$wpdb->query( $sql_delete );
 		$wpdb->query( $sql_insert_zero );
@@ -167,177 +180,284 @@ class SortByPopularPosts {
 		return sprintf( "'%s'", $str );
 	}
 
+	/**
+	 * Return quoted CSV.
+	 *
+	 * @param array[string] $post_types Qrray of string to be quoted.
+	 * @return string
+	 */
 	private static function get_quoted_csv( $post_types ) {
 		return implode( ', ', array_map( 'self::quote_str', $post_types ) );
 	}
 
+	/**
+	 * Add noindex to header.
+	 *
+	 * @param unknown $query Query.
+	 */
 	public static function add_noindex_action_if_sort_popular( $query ) {
-		if ( isset( $query->query_vars[self::$sort_query_name] ) && $query->query_vars[self::$sort_query_name] === 'popular' ) {
+		if ( isset( $query->query_vars[ self::$sort_query_name ] ) && 'popular' === $query->query_vars[ self::$sort_query_name ] ) {
 			add_action( 'wp_head', 'wp_no_robots', 30 );
 		}
 	}
 
+	/**
+	 * Return whether the query need pageviews or not.
+	 *
+	 * @param unknown $query Query.
+	 * @return bool
+	 */
 	private static function need_pageviews( $query ) {
-		if ( is_admin() || ! $query->is_main_query() )
+		if ( is_admin() || ! $query->is_main_query() ) {
 			return false;
-		
+		}
+
 		$sort_query_string = '';
-		$sort_popular = false;
-		if ( isset( $query->query_vars[self::$sort_query_name] ) ) {
-			$sort_query_string = $query->query_vars[self::$sort_query_name];
+		$sort_popular      = false;
+		if ( isset( $query->query_vars[ self::$sort_query_name ] ) ) {
+			$sort_query_string = $query->query_vars[ self::$sort_query_name ];
 		}
 		$sort_popular = self::to_sort_popular( $sort_query_string );
-		
-		if ( $query->is_archive() || $query->is_search() )
+
+		if ( $query->is_archive() || $query->is_search() ) {
 			return $sort_popular;
-		
+		}
+
 		return false;
 	}
 
 	/**
 	 * Return 0 for 'do not change', 1 for 'sort popular', 2 for 'sort date'.
-	 * 
+	 *
 	 * @param WP_Query $query
 	 * @return int
 	 */
 	public static function type_posts_order( $query ) {
-		if ( is_admin() || ! $query->is_main_query() )
+		if ( is_admin() || ! $query->is_main_query() ) {
 			return 0;
-		
+		}
+
 		$sort_query_string = '';
-		$sort_popular = 0;
-		if ( isset( $query->query_vars[self::$sort_query_name] ) ) {
-			$sort_query_string = $query->query_vars[self::$sort_query_name];
+		$sort_popular      = 0;
+		if ( isset( $query->query_vars[ self::$sort_query_name ] ) ) {
+			$sort_query_string = $query->query_vars[ self::$sort_query_name ];
 		}
 		$sort_popular = self::to_sort_popular( $sort_query_string );
-		
-		if( $query->is_search() ) {
-			if( $sort_popular ){
+
+		if ( $query->is_search() ) {
+			if ( $sort_popular ) {
 				return 1;
-			}else{
+			} else {
 				// Force sorting by date ignoring post_title
 				return 2;
 			}
-		}elseif ( $query->is_archive() ){
-			if( $sort_popular ){
+		} elseif ( $query->is_archive() ) {
+			if ( $sort_popular ) {
 				return 1;
-			}else{
+			} else {
 				return 0;
 			}
 		}
-		
+
 		return 0;
 	}
 
+	/**
+	 * Return cron time.
+	 *
+	 * @return int
+	 */
 	public static function get_cron_time() {
-		$cron_time = self::$cron_time;
-		$cur_time = current_time( 'timestamp' );
+		$cron_time      = self::$cron_time;
+		$cur_time       = current_time( 'timestamp' );
 		$time_zone_diff = intval( ( $cur_time - time() ) / 300 ) * 300;
 
 		$time_next_str = date( sprintf( 'Y-m-d %s', $cron_time ), $cur_time );
-		
+
 		return strtotime( $time_next_str ) - $time_zone_diff;
 	}
 
+	/**
+	 * Return arranged `JOIN` statement.
+	 *
+	 * @param string   $join Current SQL `JOIN` statement.
+	 * @param WP_Query $query Given query.
+	 * @return string
+	 */
 	public static function posts_join( $join, $query ) {
-		if ( ! ( self::need_pageviews( $query ) || self::type_posts_order( $query ) ) )
+		if ( ! ( self::need_pageviews( $query ) || self::type_posts_order( $query ) ) ) {
 			return $join;
-		
+		}
+
 		global $wpdb;
 		$pv_table = $wpdb->prefix . self::PV_TABLE;
-		
+
 		$join .= " LEFT JOIN {$pv_table} ON {$wpdb->posts}.ID = {$pv_table}.postid ";
 		return $join;
 	}
 
+	/**
+	 * Return arranged `ORDER BY` statement.
+	 *
+	 * @param string   $orderby Current SQL `ORDER BY` statement.
+	 * @param WP_Query $query Given query.
+	 * @return string
+	 */
 	public static function posts_orderby( $orderby, $query ) {
 		$type_posts_order = self::type_posts_order( $query );
-		if ( ! $type_posts_order )
+		if ( ! $type_posts_order ) {
 			return $orderby;
-		
+		}
+
 		global $wpdb;
 		$pv_table = $wpdb->prefix . self::PV_TABLE;
-		
-		if( $type_posts_order == 1 ) {
+
+		if ( 1 == $type_posts_order ) {
 			$orderby = "COALESCE(SUM({$pv_table}.pageviews), 0) DESC, {$wpdb->posts}.post_date DESC";
-		}elseif( $type_posts_order == 2 ){
-			// Force sorting by date ignoring post_title
+		} elseif ( 2 == $type_posts_order ) {
+			// Force sorting by date ignoring post_title.
 			$orderby = "{$wpdb->posts}.post_date DESC";
 		}
 		return $orderby;
 	}
 
+	/**
+	 * Return arranged `WHERE` statement.
+	 *
+	 * @param string   $where Current SQL`WHERE` statement.
+	 * @param WP_Query $query Given query.
+	 * @return string
+	 */
 	public static function posts_where( $where, $query ) {
 		return $where;
 	}
 
+	/**
+	 * Return arranged `GROPU BY` statement.
+	 *
+	 * @param string   $groupby Current SQL GROPU BY statement.
+	 * @param WP_Query $query Given query.
+	 * @return string
+	 */
 	public static function posts_groupby( $groupby, $query ) {
-		if ( ! ( self::need_pageviews( $query ) || self::type_posts_order( $query ) ) )
+		if ( ! ( self::need_pageviews( $query ) || self::type_posts_order( $query ) ) ) {
 			return $groupby;
-		
+		}
+
 		global $wpdb;
 		$mygroupby = "{$wpdb->posts}.ID";
-		
+
 		if ( preg_match( "/$mygroupby/", $groupby ) ) {
 			return $groupby;
 		}
 		if ( ! strlen( trim( $groupby ) ) ) {
 			return $mygroupby;
 		}
-		
+
 		$groupby = $groupby . ', ' . $mygroupby;
 		return $groupby;
 	}
 
+	/**
+	 * Add `pageviews` to SQL `SELECT` fields.
+	 *
+	 * @param string   $fields Current SQL `SELECT` fields to fetch.
+	 * @param WP_Query $query Given query.
+	 * @return string
+	 */
 	public static function posts_fields( $fields, $query ) {
-		if ( ! self::need_pageviews( $query ) )
+		if ( ! self::need_pageviews( $query ) ) {
 			return $fields;
-		
+		}
+
 		global $wpdb;
 		$pv_table = $wpdb->prefix . self::PV_TABLE;
-		
+
 		$fields .= ", sum({$pv_table}.pageviews) AS pageviews";
 		return $fields;
 	}
 
+	/**
+	 * Add query vars for sort.
+	 *
+	 * @param array $query_vars Query vars.
+	 * @return array
+	 */
 	public static function query_vars( $query_vars ) {
 		$query_vars[] = self::$sort_query_name;
 		return $query_vars;
 	}
 
+	/**
+	 * Decide whether to sort the results in order of popularity or not.
+	 *
+	 * @param string $sort_query_string Query string.
+	 * @return boolean
+	 */
 	private static function to_sort_popular( $sort_query_string ) {
 		if ( empty( $sort_query_string ) ) {
 			$sort_query_string = self::$sort_default;
 		}
-		if ( $sort_query_string == 'popular' ) {
+		if ( 'popular' === $sort_query_string ) {
 			return true;
 		}
 		return false;
 	}
 
+	/**
+	 * Return link for the given `$url` and `$sort` type
+	 *
+	 * @param string $sort Sort type.
+	 * @param string $url Base URL of the link.
+	 * @param bool   $escape Escape the output URL.
+	 * @return string
+	 */
 	public static function get_link( $sort = null, $url = '', $escape = true ) {
-		if ( empty( $url ) )
+		if ( empty( $url ) ) {
 			$url = false;
+		}
 		$url = add_query_arg( self::$sort_query_name, $sort, $url );
-		if ( $escape )
+		if ( $escape ) {
 			$url = esc_url( $url );
+		}
 		return $url;
 	}
 
-	public static function get_popular_link( $url = null, $escape = true ) {
+	/**
+	 * Return popular link for the given `$url`
+	 *
+	 * @param string $url Base URL of the link.
+	 * @param bool   $escape Escape the output URL.
+	 * @return string
+	 */
+	public static function get_popular_link( $url = '', $escape = true ) {
 		return self::get_link( 'popular', $url, $escape );
 	}
 
-	public static function get_default_link( $url = null, $escape = true ) {
+	/**
+	 * Return default link for the given `$url`
+	 *
+	 * @param string $url Base URL of the link.
+	 * @param bool   $escape Escape the output URL.
+	 * @return string
+	 */
+	public static function get_default_link( $url = '', $escape = true ) {
 		return self::get_link( 'default', $url, $escape );
 	}
 
+	/**
+	 * Return shortcode_link
+	 *
+	 * @param array  $atts parameter array.
+	 * @param string $content content string.
+	 * @return string
+	 */
 	public static function shortcode_link( $atts = null, $content = null ) {
-		$url = isset( $atts['url'] ) ? $atts['url'] : null;
-		$escape = ( isset( $atts['escape'] ) && $atts['escape'] == '0' ) ? false : true;
-		$sort = ( isset( $atts['sort'] ) ) ? $atts['sort'] : null;
-		$class = ( is_null($sort) ) ? 'default' : $sort;
-		
+		$url    = isset( $atts['url'] ) ? $atts['url'] : null;
+		$escape = ( isset( $atts['escape'] ) && '0' == $atts['escape'] ) ? false : true;
+		$sort   = ( isset( $atts['sort'] ) ) ? $atts['sort'] : null;
+		$class  = ( is_null( $sort ) ) ? 'default' : $sort;
+
 		if ( empty( $content ) ) {
 			return self::get_link( $sort, $url, $escape );
 		}
