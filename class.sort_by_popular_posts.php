@@ -83,7 +83,11 @@ class SortByPopularPosts {
 		$table_wppp_pps = $prefix . self::PPS_TABLE;
 		$table_posts = $prefix . 'posts';
 
+		$post_types = array_merge( array( 'post' ), self::get_post_types() );
+		$quoted_post_type_string = self::get_quoted_csv( $post_types );
+
 		// remove deleted
+		// TODO: Use prepare
 		$sql_delete = sprintf( 
 			"
 			DELETE sbpp
@@ -93,7 +97,7 @@ class SortByPopularPosts {
 			   SELECT posts.ID
 			    FROM {$table_posts} AS posts
 			    WHERE
-			      posts.post_type IN('post')
+			      posts.post_type IN({$quoted_post_type_string})
 			     AND
 			      posts.post_status IN('publish', 'private')
 			  );
@@ -106,7 +110,7 @@ class SortByPopularPosts {
 			 SELECT posts.ID, %d, 0
 			  FROM {$table_posts} AS posts
 			  WHERE
-			    posts.post_type IN('post')
+			    posts.post_type IN({$quoted_post_type_string})
 			   AND
 			    posts.post_status IN('publish', 'private')
 			   AND
@@ -139,6 +143,32 @@ class SortByPopularPosts {
 		$wpdb->query( $sql_delete );
 		$wpdb->query( $sql_insert_zero );
 		$wpdb->query( $sql_update );
+	}
+
+	/**
+	 * Get a list of registered post types. Builtin post types are excluded except 'post'.
+	 *
+	 * @return array[string] post types
+	 */
+	private static function get_post_types() {
+		$args = array(
+			'_builtin' => false,
+		);
+		return get_post_types( $args, 'names', 'and' );
+	}
+
+	/**
+	 * Quote a given string.
+	 *
+	 * @param string $str Input string to be quoted.
+	 * @return string Quoted string.
+	 */
+	public static function quote_str( $str ) {
+		return sprintf( "'%s'", $str );
+	}
+
+	private static function get_quoted_csv( $post_types ) {
+		return implode( ', ', array_map( 'self::quote_str', $post_types ) );
 	}
 
 	public static function add_noindex_action_if_sort_popular( $query ) {
